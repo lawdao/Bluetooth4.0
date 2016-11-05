@@ -5,7 +5,6 @@ import android.bluetooth.BluetoothDevice;
 import android.bluetooth.BluetoothGatt;
 import android.bluetooth.BluetoothGattCallback;
 import android.bluetooth.BluetoothGattCharacteristic;
-import android.bluetooth.BluetoothGattDescriptor;
 import android.bluetooth.BluetoothGattService;
 import android.bluetooth.BluetoothManager;
 import android.bluetooth.BluetoothProfile;
@@ -15,7 +14,6 @@ import android.os.Bundle;
 import android.os.Handler;
 import android.os.Message;
 import android.support.v7.app.AppCompatActivity;
-import android.util.Log;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.AdapterView;
@@ -32,6 +30,8 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
+import static com.example.fussen.bluetooth.R.id.pause;
+
 
 public class MainActivity extends AppCompatActivity implements View.OnClickListener, AdapterView.OnItemClickListener {
 
@@ -39,7 +39,6 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     private Button scanner;
     private Button stop;
     private Button btn_disconnect;
-    private Button pause;
     private Button play;
     private Button close;
     private ListView listview;
@@ -87,12 +86,10 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         stop = (Button) findViewById(R.id.stop);
         btn_disconnect = (Button) findViewById(R.id.disconnect);
         play = (Button) findViewById(R.id.play);
-        pause = (Button) findViewById(R.id.pause);
 
         listview = (ListView) findViewById(R.id.listview);
 
         play.setOnClickListener(this);
-        pause.setOnClickListener(this);
         btn_disconnect.setOnClickListener(this);
         open.setOnClickListener(this);
         stop.setOnClickListener(this);
@@ -160,17 +157,16 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             }
         } else if (view == play) {
 
-            playMusic();
-        } else if (view == pause) {
-            pauseMusic();
+            sendData();
         } else if (view == btn_disconnect) {
             //断开连接
             mBluetoothGatt.disconnect();
         }
     }
 
-    private void pauseMusic() {
+    private void sendData() {
 
+        //1.准备数据
         byte[] data = new byte[6];
         data[0] = 0x55;
         data[1] = (byte) 0xAA;
@@ -178,38 +174,25 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         data[3] = 0x03;
         data[4] = 0x02;
         data[5] = (byte) 0xFB;
+
         if (bluetoothAdapter == null || mBluetoothGatt == null) {
             ToastUtil.showToast("蓝牙异常，请重新连接", this);
         }
 
+        //2.通过指定的UUID拿到设备中的服务也可使用在发现服务回调中保存的服务
+        BluetoothGattService bluetoothGattService = services.get(0);
 
-        //向特征中写入数据
-        if (services.get(0) != null) {
-            characteristics.get(1).setValue(data);
-            mBluetoothGatt.writeCharacteristic(characteristics.get(1));
+        //3.通过指定的UUID拿到设备中的服务中的characteristic，也可以使用在发现服务回调中通过遍历服务中信息保存的Characteristic
+        BluetoothGattCharacteristic gattCharacteristic = bluetoothGattService.getCharacteristic(UUID1);
 
-        }
+        //4.将byte数据设置到特征Characteristic中去
+        gattCharacteristic.setValue(data);
+
+        //将设置好的特征发送出去
+        mBluetoothGatt.writeCharacteristic(gattCharacteristic);
+
     }
 
-    private void playMusic() {
-
-        byte[] data = new byte[6];
-        data[0] = 0x55;
-        data[1] = (byte) 0xAA;
-        data[2] = 0x00;
-        data[3] = 0x03;
-        data[4] = 0x01;
-        data[5] = (byte) 0xFC;
-        if (bluetoothAdapter == null || mBluetoothGatt == null) {
-            ToastUtil.showToast("蓝牙异常，请重新连接", this);
-            return;
-        }
-
-        if (services.get(0) != null) {
-            characteristics.get(1).setValue(data);
-            mBluetoothGatt.writeCharacteristic(characteristics.get(1));
-        }
-    }
 
 
     /**
@@ -282,8 +265,8 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     public void onItemClick(AdapterView<?> adapterView, View view, int i, long l) {
 
         ToastUtil.showToast("正在连接中,请稍后", this);
-        //停止扫描
 
+        //停止扫描
         if (mScanning) {
             bluetoothAdapter.stopLeScan(mLeScanCallback);
             mScanning = false;
@@ -294,7 +277,6 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
         //第二个参数 是否要自动连接
         mBluetoothGatt = device.connectGatt(MainActivity.this, false, mBluetoothGattCallback);
-
 
     }
 
@@ -335,9 +317,8 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
     private BluetoothGattCallback mBluetoothGattCallback = new BluetoothGattCallback() {
 
-
         /**
-         * 连接成功后发现设备服务的回调
+         * 连接成功后发现设备服务后调用此方法
          * @param gatt
          * @param status
          */
@@ -400,7 +381,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
 
         /**
-         * Characteristic数据发送后调用此回调
+         * Characteristic数据发送后调用此方法
          * @param gatt
          * @param characteristic
          * @param status
@@ -430,20 +411,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             //读取到值，在这里读数据
 
             if (status == BluetoothGatt.GATT_SUCCESS) {
-                 readCharacterisricValue(characteristic);
-
-                // 订阅远端设备的characteristic，
-                // 当此characteristic发生改变时当回调mBtGattCallback中的onCharacteristicChanged方法
-                mBluetoothGatt.setCharacteristicNotification(mReadCharacteristric,
-                        true);
-                BluetoothGattDescriptor descriptor = mReadCharacteristric
-                        .getDescriptor(UUID
-                                .fromString("00002902-0000-1000-8000-00805f9b34fb"));
-                if (descriptor != null) {
-                    byte[] val = BluetoothGattDescriptor.ENABLE_NOTIFICATION_VALUE;
-                    descriptor.setValue(val);
-                    mBluetoothGatt.writeDescriptor(descriptor);
-                }
+                readCharacterisricValue(characteristic);
             }
         }
 

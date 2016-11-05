@@ -32,13 +32,8 @@
         android:id="@+id/play"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="播放" />
+        android:text="发送数据" />
 
-    <Button
-        android:id="@+id/pause"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:text="暂停" />
 
     <Button
         android:id="@+id/disconnect"

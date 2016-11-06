@@ -278,7 +278,7 @@ private BluetoothGattCallback mBluetoothGattCallback = new BluetoothGattCallback
 
 **需要注意的是，蓝牙采用的是一应一答模式，也就是说，只要你对他做了操作之后，那么蓝牙设备都会响应你，就拿写入数据来说，只有当第一条数据写入完毕之后，才能写入第二条数据，换句话说，只有当这个回调中的onCharacteristicWrite方法执行完之后，才能继续写入数据，具体我们如何知道蓝牙什么时候响应和在什么地方响应，那么此时`BluetoothGattCallback`就显得尤为重要，蓝牙设备的所有响应都会在`BluetoothGattCallback `回调，并且执行相应的方法，下面我们就给出`BluetoothGattCallback `的解释和说明**
 
-## 9. BluetoothGattCallback
+## 11. BluetoothGattCallback
 **BluetoothGattCallback**一共有9个方法，那么只有当你调用或者和连接的设备发生互动的时候，他的与之对应的方法才会回调，下面就是方法的对应
 
 1. notification对应onCharacteristicChanged；  
@@ -311,7 +311,7 @@ gatt.readRemoteRssi()
 gatt.discoverServices()
 
 #结尾
-1. 完成了以上的8步，那么就算对蓝牙什么都不知道，那么你也能做出一个蓝牙的Demo，其中更详细的代码可以参照Demo中的源码
+1. 完成了以上的10步，那么就算对蓝牙什么都不知道，那么你也能做出一个蓝牙的Demo，其中更详细的代码可以参照Demo中的源码
 2. 这只是蓝牙的初级阶段，但是已经很厉害了好么
 3. 当然你要是和蓝牙进行通信的话，这些东西还不止，你还需要掌握更多的知识，才能完全的玩转蓝牙4.0
 4. 以后我会把蓝牙的完整解决方案都会展示出来，为大家作为参考

@@ -29,7 +29,7 @@ BLE分为三个部分Service、Characteristic、Descriptor，每个部分都拥�
 ## 1. 检查该设备是否支持BLE设备
 检查该设备是否支持BLE设备，谷歌在Android4.3才开始支持BLE设备
 
-	
+
 
 ```
    //第一步 检查设备时候支持BLE
@@ -37,7 +37,7 @@ BLE分为三个部分Service、Characteristic、Descriptor，每个部分都拥�
 	     Toast.makeText(this, "请注意，您的手机不支持BLE", Toast.LENGTH_SHORT).show();
 	  }
 ```
-        
+
 ## 2. 拿到蓝牙管理器
 **一个Android系统只有一个BluetoothAdapter**
 
@@ -47,11 +47,11 @@ BLE分为三个部分Service、Characteristic、Descriptor，每个部分都拥�
 
    bluetoothAdapter = manager.getAdapter();
 ```
-       
-  
+
+
 ## 3. 打开蓝牙
 
-	
+
 
 ```
     //检查蓝牙是否已打开 如未打开 则打开蓝牙
@@ -64,7 +64,7 @@ BLE分为三个部分Service、Characteristic、Descriptor，每个部分都拥�
 ## 4. 扫描蓝牙
 **注意：扫描蓝牙是比较耗资源的，所以扫描一段时间后应该及时关闭扫描**
 
-	
+
 
 ```
           //10秒钟后停止扫描，扫描蓝牙设备是很费资源的
@@ -75,30 +75,30 @@ BLE分为三个部分Service、Characteristic、Descriptor，每个部分都拥�
 	                bluetoothAdapter.stopLeScan(mLeScanCallback);
 	            }
 	        }, 10000);
-	
+
 	        mScanning = true;
 	        //需要参数 BluetoothAdapter.LeScanCallback(返回的扫描结果)
 	        bluetoothAdapter.startLeScan(mLeScanCallback);
 ```
 
- 
- 
+
+
 ## 5. 实现扫描结果的回调
 在第4步的时候在开始扫描的`bluetoothAdapter.startLeScan(mLeScanCallback)`中的mLeScanCallback，就是我们要实现的回调**BluetoothAdapter.LeScanCallback**，扫描的所有结果都会出现在回调里
-	
-	
+
+
 
 ```
       /**
 	     * 蓝牙扫面结果的回调
 	     */
 	    private BluetoothAdapter.LeScanCallback mLeScanCallback = new BluetoothAdapter.LeScanCallback() {
-	
+
 	        @Override
 	        public void onLeScan(BluetoothDevice bluetoothDevice, int i, byte[] bytes) {
-	
+
 	            if (bluetoothDevice != null && bluetoothDevice.getName() != null) {
-	
+
 	                    mData.add(bluetoothDevice);
 	                    runOnUiThread(new Runnable() {
 	                        @Override
@@ -108,19 +108,19 @@ BLE分为三个部分Service、Characteristic、Descriptor，每个部分都拥�
 	                            listview.setAdapter(ListAdapter);
 	                        }
 	                    });
-	
+
 	            } else {
 	                ToastUtil.showToast("没有获取到设备信息",MainActivity.this);
 	            }
 	        }
 	    };
 ```
-	 
+
 
 ## 6. 连接蓝牙
 **连接时应关闭扫描，连接是通过获取到设备的mac地址进行连接的**
 
-	 
+
 
 ```
           //停止扫描
@@ -128,20 +128,20 @@ BLE分为三个部分Service、Characteristic、Descriptor，每个部分都拥�
 	            bluetoothAdapter.stopLeScan(mLeScanCallback);
 	            mScanning = false;
 	        }
-	
+
 	        //通过蓝牙设备地址 获取远程设备 开始连接
 	        BluetoothDevice device = bluetoothAdapter.getRemoteDevice(mData.get(i).getAddress());
-	
+
 	        //第二个参数 是否要自动连接
 	        mBluetoothGatt = device.connectGatt(MainActivity.this, false, mBluetoothGattCallback);
 ```
 
-   
+
 ## 7. 实现连接成功或者失败状态的回调
 
 点击要连接的设备之后都会调用用`BluetoothGattCallback`回调，在这里我定义的是`mBluetoothGattCallback`，然后在实现回调里的`onConnectionStateChange`方法，系统会自动调用此方法
 
-	
+
 
 ```
 private BluetoothGattCallback mBluetoothGattCallback = new BluetoothGattCallback() {
@@ -175,7 +175,7 @@ private BluetoothGattCallback mBluetoothGattCallback = new BluetoothGattCallback
 ## 8. 连接成功后发现设备的所有服务
 连接成功后紧接着就得去发现连接设备中的所有服务Service，为什么要发现服务？看下前面的第一张图你就明白了，继续实现`BluetoothGattCallback`中的`onServicesDiscovered`方法，因为系统会自动调用此方法
 
-	  
+
 
 ```
           /**
@@ -185,13 +185,13 @@ private BluetoothGattCallback mBluetoothGattCallback = new BluetoothGattCallback
 	         */
 	        @Override
 	        public void onServicesDiscovered(BluetoothGatt gatt, int status) {
-	
+
 	            LogUtil.fussenLog().d("10086" + "===搜到服务===");
 	            if (status == BluetoothGatt.GATT_SUCCESS) {//发现该设备的服务
-	
+
 	                //拿到该服务 1,通过UUID拿到指定的服务  2,可以拿到该设备上所有服务的集合
 	                List<BluetoothGattService> serviceList = mBluetoothGatt.getServices();
-	
+
 	                //可以遍历获得该设备上的服务集合，通过服务可以拿到该服务的UUID，和该服务里的所有属性Characteristic
 	                for (int x = 0; x < serviceList.size(); x++) {
 	                    services.add(serviceList.get(x));
@@ -199,8 +199,8 @@ private BluetoothGattCallback mBluetoothGattCallback = new BluetoothGattCallback
 	                Message message = new Message();
 	                message.what = FIND_SERVICE;
 	                mhandler.sendMessage(message);
-	
-	
+
+
 	            } else {//未发现该设备的服务
 	                runOnUiThread(new Runnable() {
 	                    @Override
@@ -208,15 +208,15 @@ private BluetoothGattCallback mBluetoothGattCallback = new BluetoothGattCallback
 	                        ToastUtil.showToast("未发现服务", MainActivity.this);
 	                    }
 	                });
-	
+
 	            }
 	        }
 ```
-	        
+
 ## 9. 向蓝牙设备发送数据
 **连接成功之后，我们总不能什么都不做吧，要做的就是和设备通信啊，也就是向设备发送数据喽，一般数据都会写在蓝牙设备的某个服务中的一个特征中，然后发送出去，当然这还得具体看厂家的蓝牙协议**
 
-	 
+
 
 ```
         //1.准备数据
@@ -233,23 +233,23 @@ private BluetoothGattCallback mBluetoothGattCallback = new BluetoothGattCallback
 
         //3.通过指定的UUID拿到设备中的服务中的characteristic，也可以使用在发现服务回调中通过遍历服务中信息保存的Characteristic
         BluetoothGattCharacteristic gattCharacteristic = bluetoothGattService.getCharacteristic(UUID1);
-        
+
         //4.将byte数据设置到特征Characteristic中去
         gattCharacteristic.setValue(data);
 
         //5.将设置好的特征发送出去
-        mBluetoothGatt.writeCharacteristic(gattCharacteristic);	
+        mBluetoothGatt.writeCharacteristic(gattCharacteristic);
 ```
 
- 
+
 
 
 **一般硬件里读出写入的数据为二进制类型，所以要熟悉整型，字符串，二进制，十六进制等它们之间的转换，这些我会在蓝牙进阶里再展开，还有如何不停的写数据和读取数据，一并会在蓝牙进阶中给出最佳方案**
-	 
+
 ## 10. 发送数据后的回调
 **蓝牙采用的是一应一答的模式，就是说，你给他发送了一个数据，不管你是发送失败还是成功，蓝牙都会给你应答一下，我们暂且这样理解，我们肯定也是希望我们自己能够监视自己到底有没有把数据发送出去，那么此时就应该重写`BluetoothGattCallback`中的`onCharacteristicWrite `方法**
 
-	
+
 
 ```
           /**
@@ -260,18 +260,18 @@ private BluetoothGattCallback mBluetoothGattCallback = new BluetoothGattCallback
 	         */
 	        @Override
 	        public void onCharacteristicWrite(BluetoothGatt gatt, BluetoothGattCharacteristic characteristic, int status) {
-	
+
 	            if (status == BluetoothGatt.GATT_SUCCESS) {//写入成功
 	                Message message = new Message();
 	                message.what = SEND_DATA_SUCCESS;
 	                mhandler.sendMessage(message);
-	
+
 	            } else if (status == BluetoothGatt.GATT_FAILURE) {//写入失败
 	                Message message = new Message();
 	                message.what = SEND_DATA_FAIL;
 	                mhandler.sendMessage(message);
 	            } else if (status == BluetoothGatt.GATT_WRITE_NOT_PERMITTED) {// 没有写入的权限
-	
+
 	            }
 	        }
 ```
@@ -324,7 +324,7 @@ gatt.discoverServices()
 4. 如何能将蓝牙的部分形成一个完整的方案，直接拿来用，而不是还要我自己去搭建！
 5. 列位，让我们一起期待蓝牙4.0的进阶篇吧
 
-#关于我
+#关于我们
 1. 如果你喜欢我的文章，那就关注我吧，我会毫不客气的将我所学的东西都传授给你们，一点都不留
 2. [博客地址](http://blog.csdn.net/fussenyu)
 3. 我们的微信公共号：AppCode，可以在微信里搜索哦
